@@ -1,0 +1,169 @@
+jackal - certificate cloner - K Sheldrake
+
+Copyright (C) 2015  Kevin Sheldrake
+
+This file is part of jackal.
+
+Jackal is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+
+Overview
+--------
+
+jackal clones SSL certificates.  The purpose is to automate and simplify a
+step in the SSL MITM process.
+
+SSL/TLS connections are established on trust provided by the certificates that
+are exchanged.  Typically the server sends a certificate to the client for
+verification.  All certificates are signed by another certificate. 
+Self-signed certificates are signed by themselves; in all other cases, an end
+user cerficate is signed by an intermediate certificate authority, which is
+in-turn signed by other intermediates, the last of which is signed by a root
+certificate authority.  The root certificate authority is self-signed and
+should be available to the tool or client that wants to verify the end user
+certificate.
+
+To verify an end user certificate a tool or client finds the certificate that
+signed it, and then recursively verifies that.  If any of the certificates are
+contained in the CA store, the certificate is deemed to have a valid
+signature.  There are other checks, such as validity dates and confirmation of
+the end user certificate details to ensure the right certificate is in use.
+
+Man-in-the-middle attacks are possible if the certificate verification
+routines are flawed or if it is possible to add a fake CA to the CA store. 
+In order to effect such an attack, certificates that mimic the real
+certificates are required.  This tool, jackal, makes fake certificates that
+are identical to the originals except for the change of keys.
+
+Supported platforms:
+* 32bit (Arch) linux
+* 64bit (Arch) linux
+Expecting it to work on any other platforms is very optimistic of you.
+
+
+Obtain certficate chain
+-----------------------
+
+Obtain a certificate chain from a SSL server with something like:
+$ openssl s_client -connect anywhere.com:443 -showcerts < /dev/null > certs
+
+The file certs will then contain the s_client output including the certs in
+PEM format.  Jackal can take this file and clone the certificates within it.
+
+
+Create a new CA
+---------------
+
+Create a new CA with:
+$ openssl genrsa -des3 -out ca.key 2048
+$ openssl req -new -x509 -days 3650 -key ca.key -out ca.pem
+
+Check certificate with:
+$ openssl x509 -in certificate.pem -noout -text
+
+Verify certificate trust with:
+$ openssl verify -CAfile ca.pem -untrusted intermediatecas.pem certificate.pem
+
+
+Cloning options
+---------------
+
+Jackal only deals with the certificates you supply; it will not go foraging
+for missing CA certificates.  If the certificate chain you have obtained is
+lacking the CA certificate, then you may need to obtain it yourself from the
+trusted CA store and add it to the end of the file (depending on whether you
+also want to clone the chain's CA or not).  The cloning options are:
+
+Leaf certificate (-sl): Jackal will clone the leaf certficate (the server
+certificate) and ignore the rest of the chain.  If a CA is supplied (with key,
+obvs) then it will sign the new certificate with the supplied CA; otherwise,
+it will self-sign the cert.
+
+Chain (-sc): Jackal will clone the entire certificate chain.  If a CA is
+supplied, it will then sign the root of the chain with the supplied CA;
+otherwise, it will self-sign the root of the chain.
+
+Resign (-sr): Jackal will clone the certificate chain, but will replace the
+root of the chain with the supplied CA.
+
+
+Output filename spec
+--------------------
+
+Options -sl, -sc and -sr take an output filespec option, -o.
+
+Option -sl outputs one certificate and an associated key.  It appends '.pem'
+and '.key' to the filespec.
+Options -sc and -sr output multiple certificates, each with associated keys.
+Jackal appends '.n.pem' and '.n.key' to the filespec, numbering each
+certificate in the new chain, starting with the leaf certificate as 0 and
+increasing with each certificate in the chain.
+
+
+Examples
+--------
+
+$ jackal -sc -c certfile -o clonefile -C newca.pem -K newca.key
+
+Jackal will clone the certificate chain in certfile, signing it with newca,
+and output the certificates to clonefile.0.pem/key, clonefile.1.pem/key, etc.
+
+
+Command Line Arguments
+----------------------
+
+-c certificate
+
+Specifies the input certificate to clone.  If no other options are given,
+jackal will simply display the leaf certificate in the file (not as nice as
+openssl x509 -text but hey).  The certificate file must be in PEM format, but
+jackal will silently ignore anything it doesn't recognise so other guff in
+there is usually acceptable.
+
+
+-sl / -sc / -sr
+
+Specifies the kind of cloning to perform: leaf, chain, or resign.
+
+
+-o outputfilespec
+
+Specifies the prefix for the output clone certificate files.
+
+
+-C newCAcert / -K newCAkey
+
+Specifies the CA certificate and key to use in signing operations.
+
+
+Support / Patches
+-----------------
+
+The latest version of the code can be found at rtfc.org.uk.
+
+No support is offered, but if you report bugs I may try to fix them.  Patches
+are especially welcome.  Feature requests are best accompanied with a working
+patch.  I'm more likely to work on it if I have beer; see rtfc.org.uk for
+details.
+
+Changes
+-------
+
+Version 1.1 supports openssl 1.1.0; someone sneakily took away ->extra_certs
+and that broke version 1.0.
+
+
+Contact details are at rtfc.org.uk.
+
