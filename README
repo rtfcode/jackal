@@ -1,6 +1,6 @@
 jackal - certificate cloner - K Sheldrake
 
-Copyright (C) 2015  Kevin Sheldrake
+Copyright (C) 2017  Kevin Sheldrake
 
 This file is part of jackal.
 
@@ -49,7 +49,7 @@ are identical to the originals except for the change of keys.
 
 Supported platforms:
 * 32bit (Arch) linux
-* 64bit (Arch) linux
+* 64bit (Arch && Kali) linux
 Expecting it to work on any other platforms is very optimistic of you.
 
 
@@ -151,7 +151,7 @@ Specifies the CA certificate and key to use in signing operations.
 Support / Patches
 -----------------
 
-The latest version of the code can be found at rtfc.org.uk.
+The latest version of the code can be found at rtfc.org.uk and github/rtfcode.
 
 No support is offered, but if you report bugs I may try to fix them.  Patches
 are especially welcome.  Feature requests are best accompanied with a working
@@ -161,6 +161,9 @@ details.
 Changes
 -------
 
+Version 1.2 properly supports openssl 1.1.0; prev version was a half-arsed
+attempt at a fix/port and was mostly rubbish.  This version actually compiles
+and appears to work.
 Version 1.1 supports openssl 1.1.0; someone sneakily took away ->extra_certs
 and that broke version 1.0.
 
