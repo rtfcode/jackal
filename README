@@ -1,6 +1,6 @@
 jackal - certificate cloner - K Sheldrake
 
-Copyright (C) 2017  Kevin Sheldrake
+Copyright (C) 2018  Kevin Sheldrake
 
 This file is part of jackal.
 
@@ -161,6 +161,7 @@ details.
 Changes
 -------
 
+Version 1.3 has corrected version numbers, etc.
 Version 1.2 properly supports openssl 1.1.0; prev version was a half-arsed
 attempt at a fix/port and was mostly rubbish.  This version actually compiles
 and appears to work.
